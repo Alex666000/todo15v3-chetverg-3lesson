@@ -2,7 +2,7 @@ import {AddTodolistActionType, RemoveTodolistActionType, SetTodolistsActionType}
 import {TaskPriorities, TaskStatuses, TaskType, todolistsAPI, UpdateTaskModelType} from "../../api/todolists-api"
 import {Dispatch} from "redux"
 import {AppRootStateType} from "../../app/store"
-import {setErrorAC, SetErrorActionType, setStatusAC, SetStatusActionType} from "../../app/app-reducer";
+import {setAppErrorAC, SetErrorActionType, setAppStatusAC, SetStatusActionType} from "../../app/app-reducer";
 
 const initialState: TasksStateType = {}
 
@@ -51,14 +51,14 @@ export const setTasksAC = (tasks: Array<TaskType>, todolistId: string) =>
 // thunks
 export const fetchTasksTC = (todolistId: string) => (dispatch: Dispatch<TasksActionsType | SetStatusActionType>) => {
     // перед запросом крутилку покажи
-    dispatch(setStatusAC("loading"))
+    dispatch(setAppStatusAC("loading"))
     todolistsAPI.getTasks(todolistId)
         .then((res) => {
             const tasks = res.data.items
             const action = setTasksAC(tasks, todolistId)
             dispatch(action)
             // после оканчания убери крутилку
-            dispatch(setStatusAC("succeeded"))
+            dispatch(setAppStatusAC("succeeded"))
         })
 }
 export const removeTaskTC = (taskId: string, todolistId: string) => (dispatch: Dispatch<TasksActionsType>) => {
@@ -69,7 +69,7 @@ export const removeTaskTC = (taskId: string, todolistId: string) => (dispatch: D
         })
 }
 export const addTaskTC = (title: string, todolistId: string) => (dispatch: Dispatch<TasksActionsType | SetErrorActionType | SetStatusActionType>) => {
-    dispatch(setStatusAC("loading"))
+    dispatch(setAppStatusAC("loading"))
     todolistsAPI.createTask(todolistId, title)
         .then(res => {
             // логика чтобы увидеть ошибку на UI если она есть feedback...:
@@ -78,7 +78,7 @@ export const addTaskTC = (title: string, todolistId: string) => (dispatch: Dispa
                 const task = res.data.data.item
                 const action = addTaskAC(task)
                 dispatch(action)
-                dispatch(setStatusAC("succeeded"))
+                dispatch(setAppStatusAC("succeeded"))
             } else {
                 // перепроверяем - перестраховка доп if
                 //  if error here then dispatn action with Error
@@ -86,13 +86,15 @@ export const addTaskTC = (title: string, todolistId: string) => (dispatch: Dispa
                     // подчеркнулась ошибка - т.к можем диспатчить экшены которые наших же санок и касаются
                     // а тут диспатчим экшен который пришел из др редюсера
                     // добавим его тип в санку (dispatch: Dispatch<TasksActionsType | SetErrorActionType>)
-                    dispatch(setErrorAC(res.data.messages[0]))
+
+                    // или так короче написать чтобы в else не писать на строке 95
+                    // dispatch(setErrorAC(res.data.messages.length ? setErrorAC(res.data.messages[0]) : "Some error occurred"))
 
                     // если с сервера ошибка не пришла то
                 } else {
-                    dispatch(setErrorAC("Some error occurred"))
+                    dispatch(setAppErrorAC("Some error occurred"))
                 }
-                dispatch(setStatusAC("failed"))
+                dispatch(setAppStatusAC("failed"))
             }
         })
 }

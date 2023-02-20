@@ -1,3 +1,9 @@
+/*
+Мы могли бы написать isLoading со значением фалс или тру...но написали status
+– так всегда делать это универсальный способ -булеан значения указывать плохо, так как оно не расширяемо, у нас либо да или нет все! А когда есть такие типы может добавить
+что то дополнительно наше приложение легко и удобно расширяемо в библиотеках материал и тд такой же подход
+ */
+
 const initialState = {
     status: "loading" as RequestStatusType,
     error: null as string | null,
@@ -6,6 +12,7 @@ const initialState = {
 
 export const appReducer = (state: InitialStateType = initialState, action: AppActionsType): InitialStateType => {
     switch (action.type) {
+        // нейминг redux ducks
         case "APP/SET-STATUS":
             return {...state, status: action.status}
         case "APP/SET-ERROR":
@@ -15,8 +22,8 @@ export const appReducer = (state: InitialStateType = initialState, action: AppAc
     }
 }
 // actions
-export const setErrorAC = (error: string | null ) => ({type: "APP/SET-ERROR", error} as const)
-export const setStatusAC = (status: RequestStatusType) => ({type: "APP/SET-STATUS", status} as const)
+export const setAppErrorAC = (error: string | null ) => ({type: "APP/SET-ERROR", error} as const)
+export const setAppStatusAC = (status: RequestStatusType) => ({type: "APP/SET-STATUS", status} as const)
 
 
 // types
@@ -24,7 +31,7 @@ export type RequestStatusType = "idle" | "loading" | "succeeded" | "failed"
 
 type InitialStateType = typeof initialState
 
-export type SetErrorActionType = ReturnType<typeof setErrorAC>
-export type SetStatusActionType = ReturnType<typeof setStatusAC>
+export type SetErrorActionType = ReturnType<typeof setAppErrorAC>
+export type SetStatusActionType = ReturnType<typeof setAppStatusAC>
 
 type AppActionsType = SetErrorActionType | SetStatusActionType
