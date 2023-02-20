@@ -3,6 +3,7 @@ import {TaskPriorities, TaskStatuses, TaskType, todolistsAPI, UpdateTaskModelTyp
 import {Dispatch} from "redux"
 import {AppRootStateType} from "../../app/store"
 import {setAppErrorAC, SetAppErrorActionType, setAppStatusAC, SetAppStatusActionType} from "../../app/app-reducer";
+import {handleServerAppError, handleServerNetworkError} from "../../ulils/error-utils";
 
 export const tasksReducer = (state: TasksStateType = initialState, action: TasksActionsType): TasksStateType => {
     switch (action.type) {
@@ -106,6 +107,9 @@ export const addTaskTC = (title: string, todolistId: string) => (dispatch: Dispa
             dispatch(setAppErrorAC(error.message))
             // убираем крутилку чтобы не крутилась так как запрос не идет больше...
             dispatch(setAppStatusAC("failed"))
+
+            // handleServerNetworkError(error, dispatch)
+
         })
 }
 export const updateTaskTC = (taskId: string, domainModel: UpdateDomainTaskModelType, todolistId: string) =>
@@ -134,16 +138,19 @@ export const updateTaskTC = (taskId: string, domainModel: UpdateDomainTaskModelT
                     const action = updateTaskAC(taskId, domainModel, todolistId)
                     dispatch(action)
                 } else {
-                    if (res.data.messages.length) {
-                    } else {
-                        dispatch(setAppErrorAC("Some error occurred"))
-                    }
-                    dispatch(setAppStatusAC("failed"))
+                    handleServerAppError(res.data,dispatch)
+                    // if (res.data.messages.length) {
+                    // } else {
+                    //     dispatch(setAppErrorAC("Some error occurred"))
+                    // }
+                    // dispatch(setAppStatusAC("failed"))
                 }
             })
             .catch((error) => {
-                dispatch(setAppErrorAC(error.message))
-                dispatch(setAppStatusAC("failed"))
+                // ошибка которая по сети произошла - не серверная
+                handleServerNetworkError(error, dispatch)
+                // dispatch(setAppErrorAC(error.message))
+                // dispatch(setAppStatusAC("failed"))
             })
     }
 
@@ -175,5 +182,15 @@ type ThunkDispatch = Dispatch<TasksActionsType> | SetAppStatusActionType | SetAp
 UX обработка ошибок:
 сначала сделаем добавление таски
 потом обновление таски - введем очень длинный title - если есть резалткод его всегда анализируем
+
+- дублирование унесем в utils (helpers тоже называют) - если ошибка из resultCode ей понадобится вот эта тема:
+ if (res.data.messages.length) {
+                    } else {
+                        dispatch(setAppErrorAC("Some error occurred"))
+                    }
+                    dispatch(setAppStatusAC("failed"))
+
+а если ошибка из кетч ей понадобится то что внутри кетч
+
 
  */
