@@ -31,7 +31,7 @@ export type RequestStatusType = "idle" | "loading" | "succeeded" | "failed"
 
 type InitialStateType = typeof initialState
 
-export type SetErrorActionType = ReturnType<typeof setAppErrorAC>
-export type SetStatusActionType = ReturnType<typeof setAppStatusAC>
+export type SetAppErrorActionType = ReturnType<typeof setAppErrorAC>
+export type SetAppStatusActionType = ReturnType<typeof setAppStatusAC>
 
-type AppActionsType = SetErrorActionType | SetStatusActionType
+type AppActionsType = SetAppErrorActionType | SetAppStatusActionType

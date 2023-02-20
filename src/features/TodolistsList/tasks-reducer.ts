@@ -2,9 +2,7 @@ import {AddTodolistActionType, RemoveTodolistActionType, SetTodolistsActionType}
 import {TaskPriorities, TaskStatuses, TaskType, todolistsAPI, UpdateTaskModelType} from "../../api/todolists-api"
 import {Dispatch} from "redux"
 import {AppRootStateType} from "../../app/store"
-import {setAppErrorAC, SetErrorActionType, setAppStatusAC, SetStatusActionType} from "../../app/app-reducer";
-
-const initialState: TasksStateType = {}
+import {setAppErrorAC, SetAppErrorActionType, setAppStatusAC, SetAppStatusActionType} from "../../app/app-reducer";
 
 export const tasksReducer = (state: TasksStateType = initialState, action: TasksActionsType): TasksStateType => {
     switch (action.type) {
@@ -49,7 +47,7 @@ export const setTasksAC = (tasks: Array<TaskType>, todolistId: string) =>
     ({type: "SET-TASKS", tasks, todolistId} as const)
 
 // thunks
-export const fetchTasksTC = (todolistId: string) => (dispatch: Dispatch<TasksActionsType | SetStatusActionType>) => {
+export const fetchTasksTC = (todolistId: string) => (dispatch: Dispatch<TasksActionsType | SetAppStatusActionType>) => {
     // перед запросом крутилку покажи
     dispatch(setAppStatusAC("loading"))
     todolistsAPI.getTasks(todolistId)
@@ -68,7 +66,7 @@ export const removeTaskTC = (taskId: string, todolistId: string) => (dispatch: D
             dispatch(action)
         })
 }
-export const addTaskTC = (title: string, todolistId: string) => (dispatch: Dispatch<TasksActionsType | SetErrorActionType | SetStatusActionType>) => {
+export const addTaskTC = (title: string, todolistId: string) => (dispatch: Dispatch<TasksActionsType | SetAppErrorActionType | SetAppStatusActionType>) => {
     dispatch(setAppStatusAC("loading"))
     todolistsAPI.createTask(todolistId, title)
         .then(res => {
@@ -97,9 +95,21 @@ export const addTaskTC = (title: string, todolistId: string) => (dispatch: Dispa
                 dispatch(setAppStatusAC("failed"))
             }
         })
+        .catch((error) => {
+            // так смотрим структуру и проверяем ошибки
+            // debugger
+            // console.log(error)
+            // пользователю не всегда надо знать низкоуровневые названия от сервера ошибки = сложное название для пользователя
+            // но пока пусть будет но лучше текст написать: "Обратись к администратору например или Включи интернет..."
+
+            // увидим ошибку нашу UX
+            dispatch(setAppErrorAC(error.message))
+            // убираем крутилку чтобы не крутилась так как запрос не идет больше...
+            dispatch(setAppStatusAC("failed"))
+        })
 }
 export const updateTaskTC = (taskId: string, domainModel: UpdateDomainTaskModelType, todolistId: string) =>
-    (dispatch: Dispatch<TasksActionsType>, getState: () => AppRootStateType) => {
+    (dispatch: Dispatch<ThunkDispatch | any>, getState: () => AppRootStateType) => {
         const state = getState()
         const task = state.tasks[todolistId].find(t => t.id === taskId)
         if (!task) {
@@ -120,12 +130,26 @@ export const updateTaskTC = (taskId: string, domainModel: UpdateDomainTaskModelT
 
         todolistsAPI.updateTask(todolistId, taskId, apiModel)
             .then(res => {
-                const action = updateTaskAC(taskId, domainModel, todolistId)
-                dispatch(action)
+                if (res.data.resultCode === 0) {
+                    const action = updateTaskAC(taskId, domainModel, todolistId)
+                    dispatch(action)
+                } else {
+                    if (res.data.messages.length) {
+                    } else {
+                        dispatch(setAppErrorAC("Some error occurred"))
+                    }
+                    dispatch(setAppStatusAC("failed"))
+                }
+            })
+            .catch((error) => {
+                dispatch(setAppErrorAC(error.message))
+                dispatch(setAppStatusAC("failed"))
             })
     }
 
 // types
+const initialState: TasksStateType = {}
+
 export type UpdateDomainTaskModelType = {
     title?: string
     description?: string
@@ -145,3 +169,11 @@ type TasksActionsType =
     | RemoveTodolistActionType
     | SetTodolistsActionType
     | ReturnType<typeof setTasksAC>
+
+type ThunkDispatch = Dispatch<TasksActionsType> | SetAppStatusActionType | SetAppErrorActionType
+/*
+UX обработка ошибок:
+сначала сделаем добавление таски
+потом обновление таски - введем очень длинный title - если есть резалткод его всегда анализируем
+
+ */
