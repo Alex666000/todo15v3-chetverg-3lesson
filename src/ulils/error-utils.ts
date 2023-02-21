@@ -9,16 +9,19 @@ export function handleServerAppError<D>(data: ResponseType<D>, dispatch: Dispatc
     }
     dispatch(setAppStatusAC("failed"))
 }
+
 // можно передать не весь объект а только message - message: string
 export function handleServerNetworkError<D>(error: { message: string }, dispatch: Dispatch<SetAppErrorActionType | SetAppStatusActionType>) {
-    dispatch(setAppErrorAC(error ? error.message : 'Some error occurred'))
+    dispatch(setAppErrorAC(error ? error.message : "Some error occurred"))
     dispatch(setAppStatusAC("failed"))
 }
-// если ResponseType конфликтует то это тип из библиотеки - надо вручную проимпортировать
-// ошибка - не видит messages в res но у res нет messages - сообщение у data - значит data сюда должны передат
-// пишем при вызове функции handleServerAppError(res.data,dispatch) - ставим сигнатур при ошибки на параметр и при определении функции он доставит параметр и типизацию почти до конца
+
+// если ResponseType конфликтует то это тип из библиотеки - надо вручную проимпортировать из нашего апи
+// ошибка - не видит messages в res - но у res нет messages - сообщение у data - значит data сюда должны передать
+// пишем при вызове функции handleServerAppError(res.data,dispatch) - ставим сигнатур при ошибки на параметр - и при определении функции
+// он доставит параметр и типизацию почти до конца сам...
 // Dispatch - дистпатч всегда уточняется actionsTypes
-// так как сделали error: any - то в нем может сидеть undefined надо проверить
+// так как сделали error: any - то в нем может сидеть undefined надо проверить если error есть то...
 // далее вставляем функции в тот catch сверху где дублируется также
 // заменим  error: any на error: { message: string }
 // идет в обновление таски и проверяем - для этого отключим network
@@ -26,7 +29,7 @@ export function handleServerNetworkError<D>(error: { message: string }, dispatch
 
 /*
                                   ОТ ВАЛЕРЫ РЕЗУЛЬТАТ:
-AnyAction если в ошибке TS есть - означает любой экшн, надо прописать не любой а конкретный - тогда ошибка пропадет
+- AnyAction если в ошибке TS есть - означает любой экшн, А надо прописать не любой а конкретный - тогда ошибка пропадет
 
 export const handleNetworkError = (dispatch: Dispatch<AppActionsType>, message: string) => {
     dispatch(setAppErrorAC(message))
@@ -43,12 +46,11 @@ export const handleAppError = <T>(dispatch: Dispatch<AppActionsType>, data: Resp
 }
 /*
 
-Как избавится от data: any в параметрах (dispatch: Dispatch<AppActionsType>, data: any)
-будем анализировать что такое data какой ее тип идем в тудулист редюсер и смотрим какие данные там приходят - они
-берутся из апи: data для tasks и todolists разная
-- теперь вопрос как этот <T> принять? Спереди --- Дженериковая функция...
-
+- Как избавится от data: any в параметрах (dispatch: Dispatch<AppActionsType>, data: any)
+будем анализировать что такое data - какой ее тип - идем в тудулист редюсер и смотрим какие данные там приходят - потом в таск-редюсер и там какие даныые приходят
+ - они берутся из апи: data для tasks и todolists разная...
+- теперь вопрос как этот <T> принять? Спереди --- Дженериковая функция...(у нее тип  в параметрах такой же как и возвращаемый)
  */
 
 
- */
+

@@ -50,7 +50,7 @@ export const AddItemForm = React.memo(function ({addItem, disabled = false, enti
                    // disabled={entityStatus === "loading"}
         />
         <IconButton color="primary" onClick={addItemHandler} /* disabled={entityStatus === "loading"} */>
-            {/*кнопочка плюсик у AddItemForm - ее дизейблим когда нажали на удалить туду*/}
+            {/* кнопочка плюсик у AddItemForm - ее дизейблим когда нажали на удалить туду */}
             <AddBox/>
         </IconButton>
     </div>

@@ -78,9 +78,9 @@ export const addTaskTC = (title: string, todolistId: string) => (dispatch: Dispa
     dispatch(setAppStatusAC("loading"))
     todolistsAPI.createTask(todolistId, title)
         .then(res => {
-            // логика чтобы увидеть ошибку на UI если она есть feedback...:
-            // анализ ответа и ошибки со строки 71 ErrorSnackbar.ts
-            if (res.data.resultCode === 0) {
+            // логика чтобы увидеть ошибку на UI если она есть - feedback...:
+            // анализ ответа и ошибки
+            if (res.data.resultCode === ResultCode.success) {
                 const task = res.data.data.item
                 const action = addTaskAC(task)
                 dispatch(action)
@@ -88,13 +88,13 @@ export const addTaskTC = (title: string, todolistId: string) => (dispatch: Dispa
                 // dispatch(setAppStatusAC("succeeded"))
             } else {
                 // перепроверяем - перестраховка доп if
-                //  if error here then dispatch action with Error
+                //  if error here - then dispatch action with error
                 if (res.data.messages.length) {
-                    // подчеркнулась ошибка - т.к можем диспатчить экшены которые наших же санок и касаются
-                    // а тут диспатчим экшен который пришел из др редюсера
+                    // подчеркнулась ошибка - т.к можем только диспатчить экшены которые наших же санок и касаются
+                    // а тут диспатчим экшен который пришел из др. редюсера
                     // добавим его тип в санку (dispatch: Dispatch<TasksActionsType | SetErrorActionType>)
 
-                    // или так короче написать чтобы в else не писать на строке 95
+                    // или так короче написать тернарником
                     // dispatch(setErrorAC(res.data.messages.length ? setErrorAC(res.data.messages[0]) : "Some error occurred"))
 
                     // если с сервера ошибка не пришла то
@@ -110,20 +110,20 @@ export const addTaskTC = (title: string, todolistId: string) => (dispatch: Dispa
             // debugger
             // console.log(error)
             // пользователю не всегда надо знать низкоуровневые названия от сервера ошибки = сложное название для пользователя
-            // но пока пусть будет но лучше текст написать: "Обратись к администратору например или Включи интернет..."
+            // но пока пусть будет - но лучше текст написать: "Обратись к администратору например - или Включи интернет..."
 
-            // увидим ошибку нашу UX
+            // увидим ошибку нашу - UX
             dispatch(setAppErrorAC(error.message))
-            // убираем крутилку чтобы не крутилась так как запрос не идет больше...
+            // убираем крутилку чтобы не крутилась - так как запрос не идет больше...
             // удаляем крутилку
             // dispatch(setAppStatusAC("failed"))
 
             // handleServerNetworkError(error, dispatch)
 
         })
-        // всегда отработает а перед этим или then или catch
-        // очень хорошее применение finally для крутилки
-        // в случае совпадения кода в catch например и finally - последнии пререзапишет результат кетча
+        // finally всегда отработает - а перед этим или then или catch
+        // очень хорошее применение finally для крутилки...
+        // в случае совпадения кода в catch например и finally - finally пререзапишет результат catch
         .finally(() => {
             dispatch(setAppStatusAC("idle"))
         })
@@ -204,7 +204,7 @@ export enum ResultCode {
 /*
 UX обработка ошибок:
 сначала сделаем добавление таски
-потом обновление таски - введем очень длинный title - если есть резалткод его всегда анализируем
+потом обновление таски - введем очень длинный title - если есть резалткод его всегда анализируем но в реальных проектах его нет!!!
 
 - дублирование унесем в utils (helpers тоже называют) - если ошибка из resultCode ей понадобится вот эта тема:
  if (res.data.messages.length) {
@@ -215,6 +215,6 @@ UX обработка ошибок:
 
 а если ошибка из кетч ей понадобится то что внутри кетч
 
-- if (res.data.resultCode === 0) --- оль тут магическое число надо создать enum -лучше чем объект так как
+- if (res.data.resultCode === 0) --- ноль тут магическое число надо создать enum -лучше чем объект так как
 в объекте можем случайно в коде переопределить свойство а в энам это не сработатет - enum только readonly
  */
