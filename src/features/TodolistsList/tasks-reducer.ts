@@ -2,8 +2,15 @@ import {AddTodolistActionType, RemoveTodolistActionType, SetTodolistsActionType}
 import {TaskPriorities, TaskStatuses, TaskType, todolistsAPI, UpdateTaskModelType} from "../../api/todolists-api"
 import {Dispatch} from "redux"
 import {AppRootStateType} from "../../app/store"
-import {setAppErrorAC, SetAppErrorActionType, setAppStatusAC, SetAppStatusActionType} from "../../app/app-reducer";
+import {
+    AppActionsType,
+    setAppErrorAC,
+    SetAppErrorActionType,
+    setAppStatusAC,
+    SetAppStatusActionType
+} from "../../app/app-reducer";
 import {handleServerAppError, handleServerNetworkError} from "../../ulils/error-utils";
+import {AxiosError} from "axios";
 
 export const tasksReducer = (state: TasksStateType = initialState, action: TasksActionsType): TasksStateType => {
     switch (action.type) {
@@ -48,7 +55,7 @@ export const setTasksAC = (tasks: Array<TaskType>, todolistId: string) =>
     ({type: "SET-TASKS", tasks, todolistId} as const)
 
 // thunks
-export const fetchTasksTC = (todolistId: string) => (dispatch: Dispatch<TasksActionsType | SetAppStatusActionType>) => {
+export const fetchTasksTC = (todolistId: string) => (dispatch: Dispatch<TasksActionsType>) => {
     // перед запросом крутилку покажи
     dispatch(setAppStatusAC("loading"))
     todolistsAPI.getTasks(todolistId)
@@ -67,7 +74,7 @@ export const removeTaskTC = (taskId: string, todolistId: string) => (dispatch: D
             dispatch(action)
         })
 }
-export const addTaskTC = (title: string, todolistId: string) => (dispatch: Dispatch<TasksActionsType | SetAppErrorActionType | SetAppStatusActionType>) => {
+export const addTaskTC = (title: string, todolistId: string) => (dispatch: Dispatch<TasksActionsType>) => {
     dispatch(setAppStatusAC("loading"))
     todolistsAPI.createTask(todolistId, title)
         .then(res => {
@@ -77,10 +84,11 @@ export const addTaskTC = (title: string, todolistId: string) => (dispatch: Dispa
                 const task = res.data.data.item
                 const action = addTaskAC(task)
                 dispatch(action)
-                dispatch(setAppStatusAC("succeeded"))
+                /* убрали крутилку и перенесли в файналли */
+                // dispatch(setAppStatusAC("succeeded"))
             } else {
                 // перепроверяем - перестраховка доп if
-                //  if error here then dispatn action with Error
+                //  if error here then dispatch action with Error
                 if (res.data.messages.length) {
                     // подчеркнулась ошибка - т.к можем диспатчить экшены которые наших же санок и касаются
                     // а тут диспатчим экшен который пришел из др редюсера
@@ -93,10 +101,11 @@ export const addTaskTC = (title: string, todolistId: string) => (dispatch: Dispa
                 } else {
                     dispatch(setAppErrorAC("Some error occurred"))
                 }
-                dispatch(setAppStatusAC("failed"))
+                /* удалили т.к как есть файналли */
+                // dispatch(setAppStatusAC("failed"))
             }
         })
-        .catch((error) => {
+        .catch((error: AxiosError) => {
             // так смотрим структуру и проверяем ошибки
             // debugger
             // console.log(error)
@@ -106,14 +115,21 @@ export const addTaskTC = (title: string, todolistId: string) => (dispatch: Dispa
             // увидим ошибку нашу UX
             dispatch(setAppErrorAC(error.message))
             // убираем крутилку чтобы не крутилась так как запрос не идет больше...
-            dispatch(setAppStatusAC("failed"))
+            // удаляем крутилку
+            // dispatch(setAppStatusAC("failed"))
 
             // handleServerNetworkError(error, dispatch)
 
         })
+        // всегда отработает а перед этим или then или catch
+        // очень хорошее применение finally для крутилки
+        // в случае совпадения кода в catch например и finally - последнии пререзапишет результат кетча
+        .finally(() => {
+            dispatch(setAppStatusAC("idle"))
+        })
 }
 export const updateTaskTC = (taskId: string, domainModel: UpdateDomainTaskModelType, todolistId: string) =>
-    (dispatch: Dispatch<ThunkDispatch | any>, getState: () => AppRootStateType) => {
+    (dispatch: Dispatch<TasksActionsType>, getState: () => AppRootStateType) => {
         const state = getState()
         const task = state.tasks[todolistId].find(t => t.id === taskId)
         if (!task) {
@@ -134,11 +150,11 @@ export const updateTaskTC = (taskId: string, domainModel: UpdateDomainTaskModelT
 
         todolistsAPI.updateTask(todolistId, taskId, apiModel)
             .then(res => {
-                if (res.data.resultCode === 0) {
+                if (res.data.resultCode === ResultCode.success) {
                     const action = updateTaskAC(taskId, domainModel, todolistId)
                     dispatch(action)
                 } else {
-                    handleServerAppError(res.data,dispatch)
+                    handleServerAppError(res.data, dispatch)
                     // if (res.data.messages.length) {
                     // } else {
                     //     dispatch(setAppErrorAC("Some error occurred"))
@@ -176,8 +192,15 @@ type TasksActionsType =
     | RemoveTodolistActionType
     | SetTodolistsActionType
     | ReturnType<typeof setTasksAC>
+    // импортировали...
+    | AppActionsType
 
-type ThunkDispatch = Dispatch<TasksActionsType> | SetAppStatusActionType | SetAppErrorActionType
+export enum ResultCode {
+    success = 0,
+    error = 1,
+    captcha = 10
+}
+
 /*
 UX обработка ошибок:
 сначала сделаем добавление таски
@@ -192,5 +215,6 @@ UX обработка ошибок:
 
 а если ошибка из кетч ей понадобится то что внутри кетч
 
-
+- if (res.data.resultCode === 0) --- оль тут магическое число надо создать enum -лучше чем объект так как
+в объекте можем случайно в коде переопределить свойство а в энам это не сработатет - enum только readonly
  */

@@ -22,6 +22,9 @@ export type AppThunkDispatch = ThunkDispatch<AppRootStateType, any, AnyAction>
 export const useAppDispatch = () => useDispatch<AppThunkDispatch>();
 export const useAppSelector: TypedUseSelectorHook<AppRootStateType> = useSelector
 
+// типизация крутая для старого redux:
+/*export const useAppDispatch = () => useDispatch<AppThunkDispatch>();
+export const useAppSelector: TypedUseSelectorHook<AppRootStateType> = useSelector*/
 
 
 // а это, чтобы можно было в консоли браузера обращаться к store в любой момент

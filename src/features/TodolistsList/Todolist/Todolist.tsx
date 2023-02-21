@@ -9,11 +9,14 @@ import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import {Delete} from "@mui/icons-material";
 import {useAppDispatch} from "../../../app/store";
+import {RequestStatusType} from "../../../app/app-reducer";
 
 type PropsType = {
     todolist: TodolistDomainType
     // id: string
     // title: string
+// filter: FilterValuesType
+    // entityStatus: RequestStatusType
     tasks: Array<TaskType>
     changeFilter: (value: FilterValuesType, todolistId: string) => void
     addTask: (title: string, todolistId: string) => void
@@ -22,8 +25,8 @@ type PropsType = {
     removeTask: (taskId: string, todolistId: string) => void
     removeTodolist: (id: string) => void
     changeTodolistTitle: (id: string, newTitle: string) => void
-    // filter: FilterValuesType
     demo?: boolean
+    // entityStatus?: RequestStatusType
 }
 
 export const Todolist = React.memo(function ({demo = false, ...props}: PropsType) {
@@ -71,6 +74,7 @@ export const Todolist = React.memo(function ({demo = false, ...props}: PropsType
             </IconButton>
         </h3>
         <AddItemForm addItem={addTask} disabled={props.todolist.entityStatus === "loading"}/>
+        {/*disabled={props.entityStatus === 'loading'}*/}
         <div>
             {
                 tasksForTodolist.map(t => <Task key={t.id} task={t} todolistId={props.todolist.id}

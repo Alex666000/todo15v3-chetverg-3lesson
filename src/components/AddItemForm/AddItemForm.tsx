@@ -1,25 +1,27 @@
-import React, { ChangeEvent, KeyboardEvent, useState } from 'react';
-import TextField from '@mui/material/TextField';
-import IconButton from '@mui/material/IconButton';
-import { AddBox } from '@mui/icons-material';
+import React, {ChangeEvent, KeyboardEvent, useState} from "react";
+import TextField from "@mui/material/TextField";
+import IconButton from "@mui/material/IconButton";
+import {AddBox} from "@mui/icons-material";
+import {RequestStatusType} from "../../app/app-reducer";
 
 type AddItemFormPropsType = {
     addItem: (title: string) => void
     disabled?: boolean
+    entityStatus?: RequestStatusType
 }
 
-export const AddItemForm = React.memo(function ({addItem,disabled = false}: AddItemFormPropsType) {
-    console.log('AddItemForm called')
+export const AddItemForm = React.memo(function ({addItem, disabled = false, entityStatus}: AddItemFormPropsType) {
+    console.log("AddItemForm called")
 
-    let [title, setTitle] = useState('')
+    let [title, setTitle] = useState("")
     let [error, setError] = useState<string | null>(null)
 
     const addItemHandler = () => {
-        if (title.trim() !== '') {
+        if (title.trim() !== "") {
             addItem(title);
-            setTitle('');
+            setTitle("");
         } else {
-            setError('Title is required');
+            setError("Title is required");
         }
     }
 
@@ -37,6 +39,7 @@ export const AddItemForm = React.memo(function ({addItem,disabled = false}: AddI
     }
 
     return <div>
+        {/*поле ввода в AddItemForm*/}
         <TextField variant="outlined"
                    error={!!error}
                    value={title}
@@ -44,8 +47,10 @@ export const AddItemForm = React.memo(function ({addItem,disabled = false}: AddI
                    onKeyPress={onKeyPressHandler}
                    label="Title"
                    helperText={error}
+                   // disabled={entityStatus === "loading"}
         />
-        <IconButton color="primary" onClick={addItemHandler}>
+        <IconButton color="primary" onClick={addItemHandler} /* disabled={entityStatus === "loading"} */>
+            {/*кнопочка плюсик у AddItemForm - ее дизейблим когда нажали на удалить туду*/}
             <AddBox/>
         </IconButton>
     </div>

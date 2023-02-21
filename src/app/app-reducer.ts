@@ -34,4 +34,4 @@ type InitialStateType = typeof initialState
 export type SetAppErrorActionType = ReturnType<typeof setAppErrorAC>
 export type SetAppStatusActionType = ReturnType<typeof setAppStatusAC>
 
-type AppActionsType = SetAppErrorActionType | SetAppStatusActionType
+export type AppActionsType = SetAppErrorActionType | SetAppStatusActionType
